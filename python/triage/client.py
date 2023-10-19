@@ -55,7 +55,7 @@ class Client:
         except exceptions.HTTPError as err:
             raise ServerError(err)
 
-    def submit_sample_file(self, filename, file, interactive=False, profiles=None, password=None, timeout=150, network="internet"):
+    def submit_sample_file(self, filename, file, interactive=False, profiles=None, password=None, timeout=150, network="internet", escape_filename=True, tags=None):
         """
         Submit a file for analysis on Triage.
 
@@ -80,6 +80,10 @@ class Client:
                 Timeout of the analysis
             network (str):
                 Type of network routing to use ("internet" | "drop" | "tor" | "sim200" | "sim404" | "simnx")
+            escape_filename (bool):
+                Filename escaping to prevent quotation issues
+            tags (list):
+                Optional array of user-defined strings that lets the user mark a sample
         Returns:
             response (dict):
                 {
@@ -93,6 +97,7 @@ class Client:
         """
         if profiles is None:
             profiles = []
+
         d = {
             'kind': 'file',
             'interactive': interactive,
@@ -102,6 +107,11 @@ class Client:
                 'network': network
             }
         }
+        if tags:
+            d['user_tags'] = tags
+
+        if escape_filename:
+            filename = filename.replace('"', '\\"')
         if password:
             d['password'] = password
         body, content_type = encode_multipart_formdata({
